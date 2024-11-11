@@ -11,7 +11,16 @@ You need to complete the Python scripts and notebook to pass.
 
 ### Prerequisites
 - Install Python from [here](https://www.python.org/downloads/).
+- Setup virtual python environment, with
+ ```
+  python3 -m venv .venv
+  source .venv/bin/activate
+  ```
 - Install Jupyter from [here](https://jupyter.org/install).
+
+ ```
+ pip3 install jupyterlab
+ ```
 
 ### Testing Steps
 - Run all the cells in `Chapter1.ipynb`. If all the cells run without errors, you have successfully completed the challenge and are ready to submit your solution.
@@ -27,7 +36,7 @@ You need to complete the Python scripts and notebook to pass.
 
 - Edit the required files.
 - Commit your changes and push to the main branch:
-  - Add your changes by running `git add solution.sh`.
+  - Add your changes by running `git add *`.
   - Commit the changes by running `git commit -m "Solution"`.
   - Push the changes by running `git push origin main`.
 - The autograder will run your submission to verify the functionality.
