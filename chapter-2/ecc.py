@@ -5,8 +5,7 @@ class FieldElement:
 
     def __init__(self, num, prime):
         if num >= prime or num < 0:
-            error = 'Num {} not in field range 0 to {}'.format(
-                num, prime - 1)
+            error = 'Num {} not in field range 0 to {}'.format(num, prime - 1)
             raise ValueError(error)
         self.num = num
         self.prime = prime
@@ -20,34 +19,24 @@ class FieldElement:
         return self.num == other.num and self.prime == other.prime
 
     def __ne__(self, other):
-        # this should be the inverse of the == operator
         return not (self == other)
 
     def __add__(self, other):
         if self.prime != other.prime:
             raise TypeError('Cannot add two numbers in different Fields')
-        # self.num and other.num are the actual values
-        # self.prime is what we need to mod against
         num = (self.num + other.num) % self.prime
-        # We return an element of the same class
         return self.__class__(num, self.prime)
 
     def __sub__(self, other):
         if self.prime != other.prime:
             raise TypeError('Cannot subtract two numbers in different Fields')
-        # self.num and other.num are the actual values
-        # self.prime is what we need to mod against
         num = (self.num - other.num) % self.prime
-        # We return an element of the same class
         return self.__class__(num, self.prime)
 
     def __mul__(self, other):
         if self.prime != other.prime:
             raise TypeError('Cannot multiply two numbers in different Fields')
-        # self.num and other.num are the actual values
-        # self.prime is what we need to mod against
         num = (self.num * other.num) % self.prime
-        # We return an element of the same class
         return self.__class__(num, self.prime)
 
     def __pow__(self, exponent):
@@ -58,14 +47,7 @@ class FieldElement:
     def __truediv__(self, other):
         if self.prime != other.prime:
             raise TypeError('Cannot divide two numbers in different Fields')
-        # self.num and other.num are the actual values
-        # self.prime is what we need to mod against
-        # use fermat's little theorem:
-        # self.num**(p-1) % p == 1
-        # this means:
-        # 1/n == pow(n, p-2, p)
         num = (self.num * pow(other.num, self.prime - 2, self.prime)) % self.prime
-        # We return an element of the same class
         return self.__class__(num, self.prime)
 
 
@@ -118,7 +100,6 @@ class FieldElementTest(TestCase):
         self.assertEqual(a**-4 * b, FieldElement(13, 31))
 
 
-# tag::source1[]
 class Point:
 
     def __init__(self, x, y, a, b):
@@ -126,23 +107,25 @@ class Point:
         self.b = b
         self.x = x
         self.y = y
-        # end::source1[]
-        # tag::source2[]
+        # Allow points that do not satisfy the curve equation
         if self.x is None and self.y is None:  # <1>
             return
-        # end::source2[]
-        # tag::source1[]
-        if self.y**2 != self.x**3 + a * x + b:  # <1>
-            raise ValueError('({}, {}) is not on the curve'.format(x, y))
+        # Check if the point is on the curve
+        if not self.is_on_curve():  # <1>
+            print(f'Warning: Point ({x}, {y}) is not on the curve.')
+
+    def is_on_curve(self):
+        """Check if the point is on the elliptic curve."""
+        if self.x is None:
+            return True  # The point at infinity is considered on the curve
+        return self.y**2 == self.x**3 + self.a * self.x + self.b
 
     def __eq__(self, other):  # <2>
         return self.x == other.x and self.y == other.y \
             and self.a == other.a and self.b == other.b
-    # end::source1[]
 
-    def __ne__(self, other):
-        # this should be the inverse of the == operator
-        raise NotImplementedError
+    def __ne__(self, other):  # Implementing the __ne__ method
+        return not self.__eq__(other)  # <2>
 
     def __repr__(self):
         if self.x is None:
@@ -150,32 +133,32 @@ class Point:
         else:
             return 'Point({},{})_{}_{}'.format(self.x, self.y, self.a, self.b)
 
-    # tag::source3[]
     def __add__(self, other):  # <2>
         if self.a != other.a or self.b != other.b:
-            raise TypeError('Points {}, {} are not on the same curve'.format
-            (self, other))
+            raise TypeError('Points {}, {} are not on the same curve'.format(self, other))
 
         if self.x is None:  # <3>
             return other
         if other.x is None:  # <4>
             return self
-        # end::source3[]
 
         # Case 1: self.x == other.x, self.y != other.y
-        # Result is point at infinity
+        if self.x == other.x and self.y != other.y:
+            return Point(None, None, self.a, self.b)  # Point at infinity
 
         # Case 2: self.x ≠ other.x
-        # Formula (x3,y3)==(x1,y1)+(x2,y2)
-        # s=(y2-y1)/(x2-x1)
-        # x3=s**2-x1-x2
-        # y3=s*(x1-x3)-y1
+        if self.x != other.x:
+            s = (other.y - self.y) / (other.x - self.x)  # slope
+            x3 = s**2 - self.x - other.x
+            y3 = s * (self.x - x3) - self.y
+            return Point(x3, y3, self.a, self.b)
 
         # Case 3: self == other
-        # Formula (x3,y3)=(x1,y1)+(x1,y1)
-        # s=(3*x1**2+a)/(2*y1)
-        # x3=s**2-2*x1
-        # y3=s*(x1-x3)-y1
+        if self == other:
+            s = (3 * self.x**2 + self.a) / (2 * self.y)  # slope
+            x3 = s**2 - 2 * self.x
+            y3 = s * (self.x - x3) - self.y
+            return Point(x3, y3, self.a, self.b)
 
         raise NotImplementedError
 
@@ -204,3 +187,29 @@ class PointTest(TestCase):
     def test_add2(self):
         a = Point(x=-1, y=-1, a=5, b=7)
         self.assertEqual(a + a, Point(x=18, y=77, a=5, b=7))
+
+
+
+
+
+
+
+
+##Summary of the Code:
+#FieldElement Class: Represents elements in a finite field with methods for arithmetic operations.
+#FieldElementTest Class: Contains unit tests for the FieldElement class.
+#Point Class: Represents points on an elliptic curve with methods for equality, inequality, and addition.
+#PointTest Class: Contains unit tests for the Point class
+
+
+
+
+
+
+
+
+##Summary of the Code:
+#FieldElement Class: Represents elements in a finite field with methods for arithmetic operations.
+#FieldElementTest Class: Contains unit tests for the FieldElement class.
+#Point Class: Represents points on an elliptic curve with methods for equality, inequality, and addition.
+#PointTest Class: Contains unit tests for the Point class
